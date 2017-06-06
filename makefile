@@ -16,7 +16,7 @@ install: install_dftb+ install_modes install_waveplot
 install_misc: install_misc_skderivs install_misc_slakovalue
 
 .PHONY: test
-test: test_dftb+
+test: test_dftb+ test_modes
 
 include make.config
 
@@ -73,6 +73,15 @@ test_dftb+:
 	    ROOT=$(ROOT) BUILDROOT=$(BUILDDIR) test
 
 test_dftb+: dftb+
+
+.PHONY: test_modes
+test_modes: dftb+
+	$(MAKE) -C $(BUILDDIR)/prog/$(subst test_,,$@) -f		\
+	    $(ROOT)/prog/$(subst test_,,$@)/make.build ROOT=$(ROOT)	\
+	    BUILDROOT=$(BUILDDIR) test
+
+test_modes: modes
+
 
 ################################################################################
 # Install targets

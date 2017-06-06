@@ -1,0 +1,7 @@
+#
+# Tests to execute (make a separate one if you want your own custom settings)
+# If you add a new test, insert it according to its resource needs (more
+# resource intensive tests should be executed at the end).
+#
+# (Comment lines must have a '#' in the 1st column)
+evaluated/C6H6

@@ -32,3 +32,40 @@ install: $(TARGETS)
 	mkdir -p $(INSTALLDIR)/bin
 	chmod a+x $^
 	cp -p $^ $(INSTALLDIR)/bin
+
+################################################################################
+# Testing
+################################################################################
+TESTDIR := $(ROOT)/test/prog/modes
+TESTFILE := $(TESTDIR)/tests
+
+# Autotest working directory
+AUTOTEST_WORKDIR := _autotest
+
+# Program to use for running and comparing
+AUTOTEST_SCRIPT := $(TESTDIR)/bin/autotest2
+TAGDIFF_SCRIPT := $(TESTDIR)/bin/tagdiff
+
+# Complete command with options
+AUTOTEST_CMD := $(AUTOTEST_SCRIPT) -r $(TESTDIR) -w \
+$(AUTOTEST_WORKDIR) -d $(TAGDIFF_SCRIPT)
+
+# Get list of tests to execute, but only if test is specified as goal
+TESTS := $(if $(filter test summary compare,$(MAKECMDGOALS)), $(shell	\
+$(AUTOTEST_CMD) -f $(TESTFILE) -l),)
+
+
+.PHONY: $(TESTS) run test compare summary tar testclean
+
+# Prepare and run individual tests, possibly in parallel.
+$(TESTS):
+	@$(AUTOTEST_CMD) -p ../dftb+/dftb+ -s P,R $(AUTOTEST_FLAGS) $@
+
+# Run calculations and immediately compare (possibly in parallel),
+# then summarize.  The dependency ensures proper sequencing.
+test: AUTOTEST_FLAGS = -s C -v
+test: $(TESTS)
+	@$(AUTOTEST_CMD) -s S $(TESTS)
+
+testclean:
+	rm -rf $(AUTOTEST_WORKDIR)
