@@ -1,0 +1,18 @@
+Geometry = GenFormat { # Needed for chemical types and positions
+    <<< geo.gen
+}
+
+DisplayModes = {
+    PlotModes = {-6:-1} # Take the top 6 modes
+    Animate = Yes # make xyz files showing the atoms moving
+}
+
+# Currently used as the only way to get masses
+SlaterKosterFiles = Type2FileNames {
+    Separator = "-"
+    Suffix = ".skf"
+}
+
+Hessian = { # File for the second derivatives of the structure
+    <<< hessian.out
+}
