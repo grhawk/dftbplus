@@ -16,7 +16,10 @@ install: install_dftb+ install_modes install_waveplot
 install_misc: install_misc_skderivs install_misc_slakovalue
 
 .PHONY: test
-test: test_dftb+ test_modes
+test: test_dftb+ test_modes test_dptools
+
+.PHONY: check
+check: check_dptools
 
 include make.config
 
@@ -75,12 +78,16 @@ test_dftb+:
 test_dftb+: dftb+
 
 .PHONY: test_modes
-test_modes: dftb+
+test_modes:
 	$(MAKE) -C $(BUILDDIR)/prog/$(subst test_,,$@) -f		\
 	    $(ROOT)/prog/$(subst test_,,$@)/make.build ROOT=$(ROOT)	\
 	    BUILDROOT=$(BUILDDIR) test
 
-test_modes: modes
+test_modes: modes dftb+
+
+test_dptools:
+	mkdir -p $(BUILDDIR)/test/tools/dptools
+	cd $< && $(ROOT)/test/tools/dptools/runtests.sh $(PYTHONS)
 
 
 ################################################################################
@@ -104,6 +111,21 @@ install_misc_skderivs install_misc_slakovalue:
 	    -f $(ROOT)/prog/misc/$(subst install_misc_,,$@)/make.build \
 	    ROOT=$(ROOT) BUILDROOT=$(BUILDDIR) install
 
+
+################################################################################
+# Check targets
+################################################################################
+PYLINT2 := pylint
+PYLINT3 := pylint3
+
+.PHONY: check_dptools check_dptools_py2 check_dptools_py3
+check_dptools: check_dptools_py2 check_dptools_py3
+check_dptools_py2:
+	$(PYLINT2) --rcfile utils/srccheck/pylint/pylintrc-2.ini\
+            tools/dptools/src/dptools/ tools/dptools/bin/*[!~]
+check_dptools_py3:
+	$(PYLINT3) --rcfile utils/srccheck/pylint/pylintrc-3.ini\
+            tools/dptools/src/dptools/ tools/dptools/bin/*[!~]
 
 ################################################################################
 # Various targets
