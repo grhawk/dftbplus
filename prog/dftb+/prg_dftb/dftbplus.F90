@@ -549,8 +549,6 @@ program dftbplus
       call updateCoords_SCC(coord, species, neighborList, img2CentCell)
     end if
     if (tDispersion) then
-      call dispersion%updateCoords(neighborList, img2CentCell, coord, &
-          & species0)
     end if
     if (t3rdFull) then
       call thirdOrd%updateCoords(neighborList, species)
@@ -585,12 +583,6 @@ program dftbplus
     call getERep(energy%atomRep, coord, nNeighbor, neighborList%iNeighbor, &
         &species, pRepCont, img2CentCell)
     energy%Erep = sum(energy%atomRep)
-    if (tDispersion) then
-      call dispersion%getEnergies(energy%atomDisp)
-      energy%eDisp = sum(energy%atomDisp)
-    else
-      energy%atomDisp(:) = 0.0_dp
-    end if
 
     potential%extAtom = 0.0_dp
     potential%extShell = 0.0_dp
@@ -1162,6 +1154,14 @@ program dftbplus
         energy%Edftbu = 0.0_dp
       end if
 
+      if (tDispersion) then
+        call dispersion%updateCoords(neighborList, img2CentCell, coord, &
+            & species0, qOutput)
+        call dispersion%getEnergies(energy%atomDisp)
+        energy%eDisp = sum(energy%atomDisp)
+      else
+        energy%atomDisp(:) = 0.0_dp
+      end if
 
       energy%Eelec = energy%EnonSCC + energy%ESCC + energy%Espin &
           & + energy%ELS + energy%Edftbu + energy%Eext + energy%e3rd

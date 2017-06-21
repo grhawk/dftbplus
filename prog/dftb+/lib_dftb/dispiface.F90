@@ -26,13 +26,14 @@ module dispiface
 
 
   abstract interface
-    subroutine updateCoordsIface(this, neigh, img2CentCell, coords, species0)
+    subroutine updateCoordsIface(this, neigh, img2CentCell, coords, species0, charges)
       import :: DispersionIface, TNeighborList, dp
       class(DispersionIface), intent(inout) :: this
       type(TNeighborList), intent(in) :: neigh
       integer, intent(in) :: img2CentCell(:)
       real(dp), intent(in) :: coords(:,:)
       integer, intent(in) ::  species0(:)
+      real(dp), intent(in) :: charges(:,:,:)
     end subroutine updateCoordsIface
 
     subroutine updateLatVecsIface(this, latVecs)

@@ -28,19 +28,29 @@ dispcommon.o = dispcommon.o $(_mod_constants) $(_mod_sorting) $(assert.h) $(_mod
 _mod_dispcommon: dispcommon.o
 _mod_dispcommon = $(dispcommon.o)
 
+dispddmc.o: _mod_constants _mod_lapackroutines _mod_dispiface _mod_periodic _mod_dispcommon _mod_message _mod_simplealgebra _mod_accuracy assert.h
+dispddmc.o = dispddmc.o $(_mod_constants) $(_mod_lapackroutines) $(_mod_dispiface) $(_mod_periodic) $(_mod_dispcommon) $(_mod_message) $(_mod_simplealgebra) $(_mod_accuracy) $(assert.h)
+_mod_disp_ddmc: dispddmc.o
+_mod_disp_ddmc = $(dispddmc.o)
+
+dispddmcdata.o: _mod_message _mod_accuracy _mod_constants _mod_charmanip
+dispddmcdata.o = dispddmcdata.o $(_mod_message) $(_mod_accuracy) $(_mod_constants) $(_mod_charmanip)
+_mod_disp_ddmc_data: dispddmcdata.o
+_mod_disp_ddmc_data = $(dispddmcdata.o)
+
 dispdftd3.o: _mod_dispiface _mod_accuracy assert.h _mod_dftd3_module
 dispdftd3.o = dispdftd3.o $(_mod_dispiface) $(_mod_accuracy) $(assert.h) $(_mod_dftd3_module)
 _mod_dispdftd3_module: dispdftd3.o
 _mod_dispdftd3_module = $(dispdftd3.o)
 
 #ifdef WITH_DFTD3  
-dispersions.o: _mod_dispiface _mod_dispuff_module _mod_dispslaterkirkw _mod_dispuffdata _mod_dispdftd3_module
-dispersions.o = dispersions.o $(_mod_dispiface) $(_mod_dispuff_module) $(_mod_dispslaterkirkw) $(_mod_dispuffdata) $(_mod_dispdftd3_module)
+dispersions.o: _mod_dispuffdata _mod_disp_ddmc_data _mod_dispiface _mod_dispslaterkirkw _mod_dispuff_module _mod_disp_ddmc _mod_dispdftd3_module
+dispersions.o = dispersions.o $(_mod_dispuffdata) $(_mod_disp_ddmc_data) $(_mod_dispiface) $(_mod_dispslaterkirkw) $(_mod_dispuff_module) $(_mod_disp_ddmc) $(_mod_dispdftd3_module)
 _mod_dispersions: dispersions.o
 _mod_dispersions = $(dispersions.o)
 #else
-dispersions.o: _mod_dispiface _mod_dispuff_module _mod_dispslaterkirkw _mod_dispuffdata
-dispersions.o = dispersions.o $(_mod_dispiface) $(_mod_dispuff_module) $(_mod_dispslaterkirkw) $(_mod_dispuffdata)
+dispersions.o: _mod_dispuffdata _mod_disp_ddmc_data _mod_dispiface _mod_dispslaterkirkw _mod_dispuff_module _mod_disp_ddmc
+dispersions.o = dispersions.o $(_mod_dispuffdata) $(_mod_disp_ddmc_data) $(_mod_dispiface) $(_mod_dispslaterkirkw) $(_mod_dispuff_module) $(_mod_disp_ddmc)
 _mod_dispersions: dispersions.o
 _mod_dispersions = $(dispersions.o)
 #endif

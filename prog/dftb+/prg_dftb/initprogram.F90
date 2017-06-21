@@ -382,6 +382,7 @@ contains
     !! Dispersion
     type(DispSlaKirk), allocatable :: slaKirk
     type(DispUFF), allocatable :: uff
+    type(DispDDMC), allocatable :: ddmc
 #ifdef WITH_DFTD3    
     type(DispDftD3), allocatable :: dftd3
 #endif    
@@ -1158,7 +1159,17 @@ contains
           call DispUff_init(uff, input%ctrl%dispInp%uff, nAtom)
         end if
         call move_alloc(uff, dispersion)
-
+        
+      elseif (allocated(input%ctrl%dispInp%dDMC)) then
+        allocate(dDMC)
+        if (tPeriodic) then
+          call DispDDMC_init(dDMC, input%ctrl%dispInp%dDMC, nAtom, &
+              & latVec)
+        else
+          call DispDDMC_init(dDMC, input%ctrl%dispInp%dDMC, nAtom)
+        end if
+        call move_alloc(dDMC, dispersion)
+        
 #ifdef WITH_DFTD3
       elseif (allocated(input%ctrl%dispInp%dftd3)) then
         allocate(dftd3)
@@ -1977,6 +1988,8 @@ contains
         write(*,"(A)") "Using Slater-Kirkwood dispersion corrections"
       type is (DispUff)
         write(*,"(A)") "Using Lennard-Jones dispersion corrections"
+      type is (DispDDMC)
+        write(*,"(A)") "Using dDMC dispersion corrections"
 #ifdef WITH_DFTD3
       type is (DispDftD3)
         write(*,"(A)") "Using DFT-D3 dispersion corrections"

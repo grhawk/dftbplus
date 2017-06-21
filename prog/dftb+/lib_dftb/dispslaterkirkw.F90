@@ -178,12 +178,13 @@ contains
   !! \param coord  Updated coordinates.
   !! \param species0  Species of the atoms in the unit cell.
   !!
-  subroutine updateCoords(this, neigh, img2CentCell, coords, species0)
+  subroutine updateCoords(this, neigh, img2CentCell, coords, species0, charges)
     class(DispSlaKirk), intent(inout) :: this
     type(TNeighborList), intent(in) :: neigh
     integer, intent(in) :: img2CentCell(:)
     real(dp), intent(in) :: coords(:,:)
     integer, intent(in) :: species0(:)
+    real(dp), intent(in) :: charges(:,:,:)
 
     integer, allocatable :: nNeighReal(:) ! Neighbors for real space summation
     integer, allocatable :: nNeighDamp(:) ! Nr. of neighbors with damping
