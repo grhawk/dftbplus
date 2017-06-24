@@ -2799,16 +2799,9 @@ contains
     ! Since usually all parameters are given as input, 
     ! I put the ddmc parameters right here.
     real(dp), parameter, dimension(3) :: prms = (/ 1.85705835084_dp, 1.01824853175_dp, 23.0_dp /)
-
-
-    INITALLOCATE_P(input%Verb)
-    INITALLOCATE_PARR(input%params, (3))
-
-#if DEBUG > 3
-    INITALLOCATE_P(input%onlyDf)
-    call getChildValue(node, "PrintDampingFunctionAndExit", input%onlyDf, .false.)
-#endif
-
+    
+    ALLOCATE(input%params(3))
+    
     call getChildValue(node, "Parameters", value, "", child=child, &
          &list=.true., allowEmptyValue=.true., dummyValue=.true.)
     call getNodeName2(value, buffer)
@@ -2820,13 +2813,12 @@ contains
       call getChildValue(child, 'b', input%params(2))
       call getChildValue(child, 's', input%params(3))
     end select
-    call getChildValue(node, "Verbosity", input%Verb, 10)
 
-    INITALLOCATE_PARR(input%c6free, (geo%nAtom))
-    INITALLOCATE_PARR(input%polar, (geo%nAtom))
-    INITALLOCATE_PARR(input%vdWr, (geo%nAtom))
-    INITALLOCATE_PARR(input%Z, (geo%nAtom))
-    INITALLOCATE_PARR(input%incharge, (geo%nAtom))
+    ALLOCATE(input%c6free(geo%nAtom))
+    ALLOCATE(input%polar(geo%nAtom))
+    ALLOCATE(input%vdWr(geo%nAtom))
+    ALLOCATE(input%Z(geo%nAtom))
+    ALLOCATE(input%incharge(geo%nAtom))
     do iAt = 1, geo%nAtom
       call getDDMCValues(geo%speciesNames(geo%species(iAt)),input%c6free(iAt), input%polar(iAt), &
           &input%vdWr(iAt), input%Z(iAt), input%incharge(iAt), found)

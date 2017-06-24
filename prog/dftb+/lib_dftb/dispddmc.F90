@@ -28,14 +28,12 @@ module disp_ddmc
 
   !!* Contains the initialisation data for the dDMC module
   type :: DispDDMCInp
-    integer, pointer :: Verb    !* verbosity (still to be used...)
-    logical, pointer :: onlyDf  !* print the damping function values and exit (debugging purpose)
-    real(dp), pointer :: params(:) !* parameter a,b,s of the damping function
-    real(dp), pointer :: c6free(:)  !* c6 of free atoms from ddmc_data module
-    real(dp), pointer :: vdWr(:)    !* van der Waals radii from ddmc_data module
-    real(dp), pointer :: polar(:)   !* polarizabilities from ddmc_data module
-    integer, pointer :: incharge(:) !* inner electrons from ddmc_data module
-    integer, pointer :: Z(:)    !* atomic number from ddmc_data module
+    real(dp), allocatable :: params(:) !* parameter a,b,s of the damping function
+    real(dp), allocatable :: c6free(:)  !* c6 of free atoms from ddmc_data module
+    real(dp), allocatable :: vdWr(:)    !* van der Waals radii from ddmc_data module
+    real(dp), allocatable :: polar(:)   !* polarizabilities from ddmc_data module
+    integer, allocatable :: incharge(:) !* inner electrons from ddmc_data module
+    integer, allocatable :: Z(:)    !* atomic number from ddmc_data module
   end type DispDDMCInp
 
 
@@ -56,8 +54,8 @@ module disp_ddmc
     real(dp), allocatable :: mulcharge(:) ! Much more like mulliken population
     !    real(dp), allocatable :: c6_ij(:,:)
     integer :: nAtom                  !* Nr. of atoms (without images)
-    real(dp), pointer :: energies(:)  !* Energies
-    real(dp), pointer :: gradients(:,:) !* Gradients (3, nAtom)
+    real(dp), allocatable :: energies(:)  !* Energies
+    real(dp), allocatable :: gradients(:,:) !* Gradients (3, nAtom)
     real(dp) :: stress(3,3)           !* stress tensor components
     logical :: tPeriodic              !* If system is periodic
     real(dp) :: rCutoff               !* Real space cutoff
