@@ -502,8 +502,8 @@ contains
       end if
 
       ! Furche terms: X+Y, X-Y
-      xpy(:nxov_rd) = sqrt(wij(:nxov_rd)) / sqrt(omega) * evec(:nxov_rd,nstat)
-      xmy(:nxov_rd) = sqrt(omega) / sqrt(wij(:nxov_rd)) * evec(:nxov_rd,nstat)
+      xpy(:nxov_rd) = evec(:nxov_rd,nstat) * sqrt(wij(:nxov_rd) / omega)
+      xmy(:nxov_rd) = evec(:nxov_rd,nstat) * sqrt(omega / wij(:nxov_rd))
 
       ! set up transition indexing
       call rindxov_array(win, nocc, nxov, getij, iatrans)
