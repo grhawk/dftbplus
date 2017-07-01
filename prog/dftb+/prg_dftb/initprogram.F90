@@ -1238,9 +1238,6 @@ contains
       end if
       
       if (input%ctrl%lrespini%nstat == 0) then
-        if (input%ctrl%lrespini%tMulliken) then
-          call error("Muliken analysis only available for StateOfInterest non zero.")
-        end if
         if (tForces) then
           call error("Excited forces only available for StateOfInterest non zero.")
         end if

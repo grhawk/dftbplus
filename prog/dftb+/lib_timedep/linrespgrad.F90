@@ -98,11 +98,11 @@ contains
   !! \param fdArnoldi file unit for Arnoldi write out
   !! \param fdArnoldiDiagnosis file unit for Arnoldi solver tests, if
   !! this is < 1 no tests are performed
-  !! \param tEnergyWindow is an energy window specified 
+  !! \param tEnergyWindow is an energy window specified
   !! \param energyWindow window for transitions above nstat0 (if nstat0 > 0)
   !! \param tOscillatorWindow is an oscillator window window specified
   !! \param oscillatorWindow window for transitions above nstat0 (if nstat0 > 0)
-  !! \param omega energy of state nstat0 if nstat0 > 0
+  !! \param omega energy of state nstat0
   !! \param shift shift vector for potentials
   !! \param skHamCont non-SCC hamitonian data
   !! \param skOverCont overlap data
@@ -117,9 +117,9 @@ contains
       & species0, HubbardU, spinW, rnel, iNeighbor, img2CentCell, &
       & orb, tWriteTagged, fdTagged, fdMulliken, fdCoeffs, tGrndState, &
       & fdXplusY, fdTrans, fdSPTrans, fdTradip, tArnoldi, fdArnoldi, &
-      & fdArnoldiDiagnosis, fdExc,tEnergyWindow, energyWindow,tOscillatorWindow, oscillatorWindow, &
-      & omega, tGrads, shift, skHamCont, skOverCont, excgrad, derivator, rhoSqr, &
-      & occNatural, naturalOrbs)
+      & fdArnoldiDiagnosis, fdExc,tEnergyWindow, energyWindow,tOscillatorWindow, &
+      & oscillatorWindow, omega, tGrads, shift, skHamCont, skOverCont, excgrad, &
+      & derivator, rhoSqr, occNatural, naturalOrbs)
     logical, intent(in) :: tSpin
     integer, intent(in) :: natom, iAtomStart(:)
     real(dp), intent(in) :: grndEigVecs(:,:,:), grndEigVal(:,:)
@@ -169,7 +169,7 @@ contains
     integer :: nocc, nocc_r, nvir_r, nxoo_r, nxvv_r
     integer :: nxov, nxov_ud(2), nxov_r, nxov_d, nxov_rd
     integer :: norb
-    integer :: i, j, iSpin, isym
+    integer :: ii, jj, iSpin, isym, iLev, nStartLev, nEndLev
     integer :: nSpin
     character :: sym
 
@@ -208,6 +208,13 @@ contains
     tCoeffs = (fdCoeffs > 0)
     tTradip = (fdTradip > 0)
 
+    if (tMulliken) then
+      open(fdMulliken, file=excitedQOut,position="rewind", status="replace")
+      close(fdMulliken)
+      open(fdMulliken, file=excitedDipoleOut, position="rewind", status="replace")
+      close(fdMulliken)
+    end if
+
     ASSERT(fdArnoldi > 0)
     if (tArnoldi) then
       open(fdArnoldi, file=arpackOut, position="rewind", status="replace")
@@ -229,9 +236,9 @@ contains
     ! count initial number of transitions from occupied to empty states
     nxov_ud = 0
     do iSpin = 1, nSpin
-      do i = 1, norb - 1
-        do j = i, norb
-          if (filling(i,iSpin) > filling(j,iSpin) + elecTolMax) then
+      do ii = 1, norb - 1
+        do jj = ii, norb
+          if (filling(ii,iSpin) > filling(jj,iSpin) + elecTolMax) then
             nxov_ud(iSpin) = nxov_ud(iSpin) + 1
           end if
         end do
@@ -255,15 +262,6 @@ contains
     end if
     if (nstat /= 0 .and. symc == "B") then
       call error("Linresp: Both symmetries not allowed if a specific state is excited")
-    end if
-    if (nstat == 0 .and. tZVector) then
-      call error("Linresp: Properties calculation only available  with one selected excited state.")
-    end if
-    if (nstat == 0 .and. tMulliken) then
-      call error("Linresp: Excited charges available only with one selected excited state.")
-    end if
-    if (nstat == 0 .and. tCoeffs) then
-      call error("Linresp: Coefficients only available with one selected excited state.")
     end if
     if (tZVector .and. nexc > nxov - 1) then
       call error("Linresp: With gradients/properties, nexc can be greater than the number of&
@@ -334,47 +332,48 @@ contains
     sposz(:) = twothird * wij(:) * sum(snglPartTransDip**2, dim=2)
 
     if (tOscillatorWindow .and. tZVector ) then
-      call error("Incompabilitity between excited state property&
+      call error("Currently incompabilitity between excited state property&
           & evaluation and an oscillator strength window at the moment.")
     end if
 
+
     if (tOscillatorWindow .or. tEnergyWindow) then
-      
+
       if (.not. tEnergyWindow) then
-        
+
         ! find transitions that are strongly dipole allowed (> oscillatorWindow)
         call dipselect(wij, sposz, win, snglPartTransDip,nxov_rd, &
             & oscillatorWindow, grndEigVal, getij)
-        
+
       else
-        
+
         energyThreshold = wij(nexc) + energyWindow
         nxov_r = count(wij <= energyThreshold)
-        
+
         nxov_d = 0
         if (tOscillatorWindow) then
-          
+
           ! find transitions that are strongly dipole allowed (> oscillatorWindow)
           call dipselect(wij(nxov_r+1:), sposz(nxov_r+1:), win(nxov_r+1:), &
               & snglPartTransDip(nxov_r+1:,:),nxov_d, oscillatorWindow, &
               & grndEigVal, getij)
-          
+
         end if
-        
+
         nxov_rd = nxov_r + nxov_d
-      
+
       end if
     else
-      
+
       nxov_rd = nxov
-      
+
     end if
-    
+
     ! just in case energy/dipole windows add no extra states, and is due to an
     ! arpack solver requirement combined with the need to get at least nexc
     ! states
     nxov_rd = max(nxov_rd,min(nexc+1,nxov))
-    
+
     if (fdXplusY >  0) then
       open(fdXplusY, file=XplusYOut, position="rewind", status="replace")
     end if
@@ -442,27 +441,34 @@ contains
     if (tArnoldi) then
       close(fdArnoldi)
     end if
-    
+
     if (fdTrans > 0) close(fdTrans)
     if (fdXplusY > 0) close(fdXplusY)
     if (fdExc > 0) close(fdExc)
     if (fdTradip > 0) close(fdTradip)
-    
-    if (nstat == 0) then
-      omega = 0.0_dp
-      return
-    end if
-    
+
     ! Remove some un-used memory
     DEALLOCATE(snglPartTransDip)
     DEALLOCATE(transitionDipoles)
     DEALLOCATE(sposz)
 
-    omega = sqrt(eval(nstat))
+    if (.not. tZVector) then
+      if (nstat == 0) then
+        omega = 0.0_dp
+      else
+        omega = sqrt(eval(nstat))
+      end if
+    else
 
+      ! calculate Furche vectors and transition density matrix for various properties
 
-    if (tZVector) then ! calculate Furche vectors and transition
-                       ! density matrix for various properties
+      if (nstat == 0) then
+        nStartLev = 1
+        nEndLev = nexc
+      else
+        nStartLev = nstat
+        nEndLev = nstat
+      end if
 
       if (tSpin) then
         call error("Z vector evaluation does not currently support spin&
@@ -474,10 +480,10 @@ contains
         call error("Fractional fillings not currently possible for excited &
             &state property calculations")
       end if
-      
+
       ! redefine if needed (generalize it for spin-polarized and fractional occupancy)
       nocc = int(rnel) / 2
-      
+
       ! count virtual and occupied states
       call getNorb_r(nxov_rd, win, getij, nocc, nocc_r, nvir_r)
 
@@ -501,44 +507,46 @@ contains
         ALLOCATE(pc(norb, norb))
       end if
 
-      ! Furche terms: X+Y, X-Y
-      xpy(:nxov_rd) = evec(:nxov_rd,nstat) * sqrt(wij(:nxov_rd) / omega)
-      xmy(:nxov_rd) = evec(:nxov_rd,nstat) * sqrt(omega / wij(:nxov_rd))
-
       ! set up transition indexing
       call rindxov_array(win, nocc, nxov, getij, iatrans)
 
+      do iLev = nStartLev, nEndLev
+        omega = sqrt(eval(iLev))
+        ! Furche terms: X+Y, X-Y
+        xpy(:nxov_rd) = evec(:nxov_rd,iLev) * sqrt(wij(:nxov_rd) / omega)
+        xmy(:nxov_rd) = evec(:nxov_rd,iLev) * sqrt(omega / wij(:nxov_rd))
 
-      ! solve for Z and W to get excited state density matrix
-      call getZVectorEqRHS(xpy, xmy, win, iAtomStart, nocc, nocc_r, &
-          & nxov_ud(1), getij, iatrans, natom, species0,grndEigVal(:,1), &
-          & stimc, grndEigVecs, gammaMat, spinW, omega, sym, rhs, t, &
-          & wov, woo, wvv)
-      call solveZVectorEq(rhs, win, nxov_ud(1), getij, natom, iAtomStart, &
-          & stimc, gammaMat, wij(:nxov_rd), grndEigVecs)
-      call calcWVectorZ(rhs, win, nocc, nocc_r, nxov_ud(1), getij, iAtomStart, &
-          & stimc, grndEigVecs, gammaMat, grndEigVal(:,1), wov, woo, wvv)
-      call calcPMatrix(t, rhs, win, getij, pc)
+        ! solve for Z and W to get excited state density matrix
+        call getZVectorEqRHS(xpy, xmy, win, iAtomStart, nocc, nocc_r, &
+            & nxov_ud(1), getij, iatrans, natom, species0,grndEigVal(:,1), &
+            & stimc, grndEigVecs, gammaMat, spinW, omega, sym, rhs, t, &
+            & wov, woo, wvv)
+        call solveZVectorEq(rhs, win, nxov_ud(1), getij, natom, iAtomStart, &
+            & stimc, gammaMat, wij(:nxov_rd), grndEigVecs)
+        call calcWVectorZ(rhs, win, nocc, nocc_r, nxov_ud(1), getij, iAtomStart, &
+            & stimc, grndEigVecs, gammaMat, grndEigVal(:,1), wov, woo, wvv)
+        call calcPMatrix(t, rhs, win, getij, pc)
 
-      call writeCoeffs(pc, grndEigVecs, filling, nocc, fdCoeffs, &
-          & tCoeffs, tGrndState, occNatural, naturalOrbs)
+        call writeCoeffs(pc, grndEigVecs, filling, nocc, fdCoeffs, &
+            & tCoeffs, tGrndState, occNatural, naturalOrbs)
 
-      ! Make MO to AO transformation of the excited density matrix
-      call unitary(pc, grndEigVecs(:,:,1))
+        ! Make MO to AO transformation of the excited density matrix
+        call unitary(pc, grndEigVecs(:,:,1))
 
-      call getExcMulliken(iAtomStart, pc, SSqr, dqex)
-      if (tMulliken) then
-        call writeExcMulliken(sym, nstat, dq, dqex, coord0, fdMulliken)
-      end if
+        call getExcMulliken(iAtomStart, pc, SSqr, dqex)
+        if (tMulliken) then
+          call writeExcMulliken(sym, iLev, dq, dqex, coord0, fdMulliken)
+        end if
 
+        if (tGrads) then
+          call addGradients(sym, nxov_rd, natom, species0, iAtomStart, norb, &
+              & nocc, nocc_r, nxov_ud(1), getij, win, grndEigVecs, pc, stimc, &
+              & dq, dqex, gammaMat, HubbardU, spinW, shift, woo, wov, wvv, &
+              & xpy, coord0, orb, skHamCont, skOverCont, derivator, &
+              & rhoSqr(:,:,1), excgrad)
+        end if
 
-      if (tGrads) then
-        call addGradients(sym, nxov_rd, natom, species0, iAtomStart, norb, &
-            & nocc, nocc_r, nxov_ud(1), getij, win, grndEigVecs, pc, stimc, &
-            & dq, dqex, gammaMat, HubbardU, spinW, shift, woo, wov, wvv, &
-            & xpy, coord0, orb, skHamCont, skOverCont, derivator, &
-            & rhoSqr(:,:,1), excgrad)
-      end if
+      end do
 
     end if
 
@@ -983,7 +991,7 @@ contains
       call transq(i, a, iAtomStart, updwn, stimc, c, qij)
       xpyq(:) = xpyq + xpy(ia) * qij
     end do
-    
+
     ! qgamxpyq(ab) = sum_jc K_ab,jc (X+Y)_jc
     if (sym == "S") then
       call hemv(gamxpyq, gammaMat,  xpyq)
@@ -999,7 +1007,7 @@ contains
         qgamxpyq(ab) = 2.0_dp * sum(qij * xpyq * spinW(species0))
       end do
     end if
-    
+
     ! rhs(ia) -= Qia = sum_b (X+Y)_ib * qgamxpyq(ab))
     do ia = 1, nxov
       call indxov(win, ia, getij, i, a)
@@ -1013,25 +1021,25 @@ contains
         end if
       end do
     end do
-    
+
     ! -rhs = -rhs - sum_j (X + Y)_ja H + _ij[X + Y]
     ! qgamxpyq(ij) = sum_kb K_ij,kb (X+Y)_kb
     if (sym == "S") then
       do ij = 1, nxoo
         qgamxpyq(ij) = 0.0_dp
         call indxoo(homo, nocc, ij, i, j)
-        call transq(i, j, iAtomStart, updwn, stimc, c, qij)        
+        call transq(i, j, iAtomStart, updwn, stimc, c, qij)
         qgamxpyq(ij) = 2.0_dp * sum(qij * gamxpyq)
       end do
-    else      
+    else
       do ij = 1, nxoo
         qgamxpyq(ij) = 0.0_dp
         call indxoo(homo, nocc, ij, i, j)
-        call transq(i, j, iAtomStart, updwn, stimc, c, qij)        
+        call transq(i, j, iAtomStart, updwn, stimc, c, qij)
         qgamxpyq(ij) = 2.0_dp * sum(qij * xpyq * spinW(species0))
       end do
     end if
-    
+
     ! rhs(ia) += Qai = sum_j (X+Y)_ja qgamxpyq(ij)
     ! add Qai to Wia as well.
     do ia = 1, nxov
@@ -1283,15 +1291,15 @@ contains
 
   !> Excited state Mulliken charges and dipole moments written to disc
   !! \param sym symmetry label
-  !! \param nstat state index
+  !! \param iState state index
   !! \param dq ground state net charge
   !! \param dqex change in atomic charges from ground to excited state
   !! \param coord0 central cell coordinates
   !! \param fdMulliken file unit for Mulliken data
   !! \param fdTagged unit for autotest tagging data
-  subroutine writeExcMulliken(sym, nstat, dq, dqex, coord0, fdMulliken)
+  subroutine writeExcMulliken(sym, iState, dq, dqex, coord0, fdMulliken)
     character, intent(in) :: sym
-    integer, intent(in)   :: nstat
+    integer, intent(in)   :: iState
     real(dp), intent(in)  :: dq(:), dqex(:), coord0(:,:)
     integer, intent(in) :: fdMulliken
 
@@ -1304,9 +1312,9 @@ contains
     ASSERT(all(shape(coord0) == [3,nAtom]))
 
     ! Output of excited state Mulliken charges
-    open(fdMulliken, file=excitedQOut,position="rewind", status="replace")
+    open(fdMulliken, file=excitedQOut, position="append")
     write(fdMulliken, "(a,a,i2)") "# MULLIKEN CHARGES of excited state ",&
-        & sym, nstat
+        & sym, iState
     write(fdMulliken, "(a,2x,A,i4)") "#", 'Natoms =',natom
     write(fdMulliken, "(a)") "# Atom     netCharge  "
     write(fdMulliken, "(a)") "#============================================"
@@ -1319,9 +1327,9 @@ contains
     dipol(:) = -1.0_dp * matmul(coord0, dq + dqex)
     dipabs = sqrt(sum(dipol**2))
 
-    open(fdMulliken, file=excitedDipoleOut, position="rewind", status="replace")
+    open(fdMulliken, file=excitedDipoleOut, position="append")
     write(fdMulliken, "(a,a,i2)") "Mulliken analysis of excited state ",&
-        & sym, nstat
+        & sym, iState
     write(fdMulliken, "(a)") "=============================================="
     write(fdMulliken, "(a)") " "
     write(fdMulliken, "(a)") "Mulliken exc. state dipole moment [Debye]"

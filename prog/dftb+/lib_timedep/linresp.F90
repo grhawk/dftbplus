@@ -219,7 +219,7 @@ contains
   !! \param tWriteTagged print tag information
   !! \param fdTagged file id for tagging information
   !! \param excEnergy excitation energy (only when nStat /=0, othewise
-  !! set numerically 0)  
+  !! set numerically 0)
   subroutine LinResp_calcExcitations(tSpin, self, iAtomStart, eigVec, eigVal, SSqrReal, filling, &
       & coords0, dqAt, species0, iNeighbor, img2CentCell, orb, tWriteTagged, fdTagged, excEnergy)
     logical, intent(in) :: tSpin
