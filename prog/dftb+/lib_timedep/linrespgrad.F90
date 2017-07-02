@@ -117,7 +117,7 @@ contains
       & species0, HubbardU, spinW, rnel, iNeighbor, img2CentCell, &
       & orb, tWriteTagged, fdTagged, fdMulliken, fdCoeffs, tGrndState, &
       & fdXplusY, fdTrans, fdSPTrans, fdTradip, tArnoldi, fdArnoldi, &
-      & fdArnoldiDiagnosis, fdExc,tEnergyWindow, energyWindow,tOscillatorWindow, &
+      & fdArnoldiDiagnosis, fdExc, tEnergyWindow, energyWindow, tOscillatorWindow, &
       & oscillatorWindow, omega, tGrads, shift, skHamCont, skOverCont, excgrad, &
       & derivator, rhoSqr, occNatural, naturalOrbs)
     logical, intent(in) :: tSpin
@@ -389,7 +389,7 @@ contains
       write(fdTradip,'(5x,a,5x,a,7x,a,6x,a,6x,a,6x,a)') "#", 'w [eV]',&
           & 'Transition dipole (x,y,z) [Debye]'
       write(fdTradip,*)
-      write(fdTradip,'(1x,65("="))')
+      write(fdTradip,'(1x,49("="))')
       write(fdTradip,*)
     endif
 
@@ -465,6 +465,11 @@ contains
       if (nstat == 0) then
         nStartLev = 1
         nEndLev = nexc
+
+        if (tGrads) then
+          call error("Forces currently not available unless a single excited state is specified")
+        end if
+
       else
         nStartLev = nstat
         nEndLev = nstat
@@ -547,6 +552,8 @@ contains
         end if
 
       end do
+
+      omega = 0.0_dp
 
     end if
 
@@ -1316,10 +1323,10 @@ contains
     write(fdMulliken, "(a,a,i2)") "# MULLIKEN CHARGES of excited state ",&
         & sym, iState
     write(fdMulliken, "(a,2x,A,i4)") "#", 'Natoms =',natom
-    write(fdMulliken, "(a)") "# Atom     netCharge  "
-    write(fdMulliken, "(a)") "#============================================"
+    write(fdMulliken, "('#',1X,A4,T15,A)")'Atom','netCharge'
+    write(fdMulliken,'("#",41("="))')
     do m = 1,  natom
-      write(fdMulliken,"(i5,5x,f10.6)") m, -dq(m) - dqex(m)
+      write(fdMulliken,"(i5,1x,f16.8)") m, -dq(m) - dqex(m)
     end do
     close(fdMulliken)
 
@@ -1330,16 +1337,14 @@ contains
     open(fdMulliken, file=excitedDipoleOut, position="append")
     write(fdMulliken, "(a,a,i2)") "Mulliken analysis of excited state ",&
         & sym, iState
-    write(fdMulliken, "(a)") "=============================================="
-    write(fdMulliken, "(a)") " "
+    write(fdMulliken, '(42("="))')
     write(fdMulliken, "(a)") "Mulliken exc. state dipole moment [Debye]"
-    write(fdMulliken, "(a)") "=============================================="
-    write(fdMulliken, "(3(1x,f20.12))") (dipol(m) * au__Debye, m = 1, 3)
-    write(fdMulliken, "(a)") " "
+    write(fdMulliken, '(42("="))')
+    write(fdMulliken, "(3f14.8)") (dipol(m) * au__Debye, m = 1, 3)
     write(fdMulliken, "(a)") "Norm of exc. state dipole moment [Debye]"
-    write(fdMulliken, "(a)") "=============================================="
-    write(fdMulliken, "(1x,f20.12)") dipabs * au__Debye
-    write(fdMulliken, "(a)")
+    write(fdMulliken, '(42("="))')
+    write(fdMulliken, "(e20.12)") dipabs * au__Debye
+    write(fdMulliken, *)
     close(fdMulliken)
 
   end subroutine writeExcMulliken
@@ -1681,8 +1686,7 @@ contains
       ! Better to get this by post-processing DFTB+ output, but here for
       ! compatibility at the moment
       if (tCoeffs) then
-        open(fdCoeffs, file=excitedCoefsOut, position="rewind", &
-            & status="replace")
+        open(fdCoeffs, file=excitedCoefsOut, position="append")
         write(fdCoeffs,*) 'T F'
         do ii = 1, norb
           jj = norb - ii + 1
@@ -1803,13 +1807,13 @@ contains
         if (tSpin) then
           sign = " "
           write(fdExc, &
-              & '(1x,f10.3,4x,f12.7,4x,i5,3x,a,1x,i5,7x,f6.3,2x,f10.3,4x, &
+              & '(1x,f10.3,4x,f14.8,2x,i5,3x,a,1x,i5,7x,f6.3,2x,f10.3,4x, &
               & f6.3)') &
               & Hartree__eV * sqrt(eval(i)), osz(i), m, '->', n, weight, &
               & Hartree__eV * wij(iweight), Ssq(i)
         else
           write(fdExc, &
-              & '(1x,f10.3,4x,f12.7,4x,i5,3x,a,1x,i5,7x,f6.3,2x,f10.3,6x,a)') &
+              & '(1x,f10.3,4x,f14.8,2x,i5,3x,a,1x,i5,7x,f6.3,2x,f10.3,6x,a)') &
               & Hartree__eV * sqrt(eval(i)), osz(i), m, '->', n, weight,&
               & Hartree__eV * wij(iweight), sign
         end if
@@ -1829,9 +1833,9 @@ contains
           write(fdTrans, '(2x,a,1x,i5,5x,f10.3,1x,a,3x,a)') &
               & 'Energy ', i,  Hartree__eV * sqrt(eval(i)), 'eV', sign
           write(fdTrans,*)
-          write(fdTrans,'(2x,a,9x,a,7x,a)') &
+          write(fdTrans,'(2x,a,T26,a,T42,a)') &
               & 'Transition', 'Weight', 'KS [eV]'
-          write(fdTrans,'(1x,45("="))')
+          write(fdTrans,'(1x,48("="))')
 
           sign = " "
           do j = 1, nmat
@@ -1844,7 +1848,7 @@ contains
               if (updwn) sign = "U"
             end if
             write(fdTrans,&
-                & '(i5,3x,a,1x,i5,1x,1a,1x,f8.4,2x,f10.3)') &
+                & '(i5,3x,a,1x,i5,1x,1a,T24,f10.8,T36,f14.8)') &
                 & m, '->', n, sign, wvec(j), Hartree__eV * wij(wvin(j))
           end do
         end if
@@ -1869,12 +1873,12 @@ contains
         if (tSpin) then
           sign = " "
           write(fdExc, &
-              & '(6x,A,T12,4x,f12.7,4x,i5,3x,a,1x,i5,7x,A,2x,f10.3,4x,f6.3)') &
+              & '(6x,A,T12,4x,f14.8,2x,i5,3x,a,1x,i5,7x,A,2x,f10.3,4x,f6.3)') &
               & '< 0', osz(i), m, '->', n, '-', Hartree__eV * wij(iweight), &
               & Ssq(i)
         else
           write(fdExc, &
-              & '(6x,A,T12,4x,f12.7,4x,i5,3x,a,1x,i5,7x,f6.3,2x,f10.3,6x,a)') &
+              & '(6x,A,T12,4x,f14.8,2x,i5,3x,a,1x,i5,7x,f6.3,2x,f10.3,6x,a)') &
               & '< 0', osz(i), m, '->', n, weight,&
               & Hartree__eV * wij(iweight), sign
         end if
