@@ -553,7 +553,9 @@ contains
 
       end do
 
-      omega = 0.0_dp
+      if (nstat == 0) then
+        omega = 0.0_dp
+      end if
 
     end if
 
