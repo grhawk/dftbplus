@@ -5,13 +5,15 @@
 !  See the LICENSE file for terms of usage and distribution.                                       !
 !--------------------------------------------------------------------------------------------------!
 
+#:include 'common.fypp'
+
 !> Dispersion correction based on Mulliken charges
 !!
 !! \ref DOI: 10.1002/qua.24887
 !! \note Original code at https://github.com/grhawk/dDMC/
 !!
 module disp_ddmc
-#include "assert.h"
+  use assert
   use accuracy
   use simplealgebra, only : determinant33
   use lapackroutines, only : matinv
@@ -104,16 +106,18 @@ contains
     real(dp) :: tol, c6max
     real(dp), parameter :: c6extimScale = 1.1
 
-    ASSERT(.not. this%tInit)
-    ASSERT(size(inp%params) == 3)
-    ASSERT(size(inp%c6free) == nAtom)
-    ASSERT(size(inp%vdWr) == nAtom)
-    ASSERT(size(inp%polar) == nAtom)
-    ASSERT(size(inp%incharge) == nAtom)
-    ASSERT(size(inp%Z) == nAtom)
-    ASSERT_ENV(if (present(latVecs)) then)
-    ASSERT_ENV(ASSERT(all(shape(latVecs) == (/ 3, 3 /))))
-    ASSERT_ENV(end if)
+    @:ASSERT(.not. this%tInit)
+    @:ASSERT(size(inp%params) == 3)
+    @:ASSERT(size(inp%c6free) == nAtom)
+    @:ASSERT(size(inp%vdWr) == nAtom)
+    @:ASSERT(size(inp%polar) == nAtom)
+    @:ASSERT(size(inp%incharge) == nAtom)
+    @:ASSERT(size(inp%Z) == nAtom)
+  #:call ASSERT_CODE
+    if (present(latVecs)) then)
+      @:ASSERT(all(shape(latVecs) == (/ 3, 3 /)))
+    end if
+  #:endcall ASSERT_CODE
 
     allocate(this%mulcharge(nAtom))
     allocate(this%c6aim(nAtom))
@@ -202,7 +206,7 @@ contains
     integer, allocatable :: nNeighReal(:) ! Neighbors for real space summation
     integer, allocatable :: nNeighDamp(:) ! Nr. of neighbors with damping
 
-    ASSERT(this%tInit)
+    @:ASSERT(this%tInit)
 
     !! Charge dimensions are: orbital, nAtom, spin
     do iAt1 = 1, this%nAtom
@@ -293,9 +297,9 @@ contains
     class(DispDDMC), intent(inout) :: this
     real(dp), intent(out) :: energies(:)
 
-    ASSERT(this%tInit)
-    ASSERT(this%coordsUpdated)
-    ASSERT(size(energies) == this%nAtom)
+    @:ASSERT(this%tInit)
+    @:ASSERT(this%coordsUpdated)
+    @:ASSERT(size(energies) == this%nAtom)
 
     energies(:) = this%energies(:)
 
@@ -309,9 +313,9 @@ contains
     class(DispDDMC), intent(inout) :: this
     real(dp), intent(inout) :: gradients(:,:)
 
-    ASSERT(this%tInit)
-    ASSERT(this%coordsUpdated)
-    ASSERT(all(shape(gradients) == [ 3, this%nAtom ]))
+    @:ASSERT(this%tInit)
+    @:ASSERT(this%coordsUpdated)
+    @:ASSERT(all(shape(gradients) == [ 3, this%nAtom ]))
 
     gradients(:,:) = gradients(:,:) + this%gradients(:,:)
 
@@ -328,8 +332,8 @@ contains
     class(DispDDMC), intent(inout) :: this
     real(dp), intent(out) :: stress(:,:)
 
-    ASSERT(this%coordsUpdated)
-    ASSERT(all(shape(stress) == [3,3]))
+    @:ASSERT(this%coordsUpdated)
+    @:ASSERT(all(shape(stress) == [3,3]))
 
     stress = this%stress
     ! This should be tested better...
@@ -344,7 +348,7 @@ contains
     class(DispDDMC), intent(inout) :: this
     real(dp) :: cutoff
 
-    ASSERT(this%tInit)
+    @:ASSERT(this%tInit)
     cutoff = this%rCutoff
 
   end function getRCutoff

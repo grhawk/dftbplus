@@ -5,6 +5,8 @@
 !  See the LICENSE file for terms of usage and distribution.                                       !
 !--------------------------------------------------------------------------------------------------!
 
+#:include 'common.fypp'
+
 !> Offers everything which is publicly available when dealing with dispersions.
 !!
 module dispersions
@@ -14,19 +16,20 @@ module dispersions
   use dispslaterkirkw
   use disp_ddmc
   use disp_ddmc_data
-#ifdef WITH_DFTD3  
+#:if WITH_DFTD3
   use dispdftd3_module
-#endif
+#:endif
   implicit none
   public
+
 
   type :: DispersionInp
     type(DispUffInp), allocatable :: uff
     type(DispSlaKirkInp), allocatable :: slakirk
     type(DispDDMCInp), allocatable :: ddmc
-#ifdef WITH_DFTD3    
+  #:if WITH_DFTD3
     type(DispDftD3Inp), allocatable :: dftd3
-#endif    
+  #:endif
   end type DispersionInp
-  
+
 end module dispersions
