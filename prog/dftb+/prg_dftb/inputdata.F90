@@ -128,6 +128,11 @@ module inputdata_module
     real(dp)               :: tempElec      = 0.0_dp
     logical                :: tFixEf        = .false.
     real(dp)               :: Ef(2)         = 0.0_dp
+
+    ! set the lowest eigenvalue in the system
+    logical                :: tFixLowestEi   = .false.
+    real(dp)               :: FixLowestEi(2) = 0.0_dp
+
     logical                :: tFillKSep     = .false.
     integer                :: iDistribFn    = 0
     real(dp)               :: wvScale       = 0.0_dp

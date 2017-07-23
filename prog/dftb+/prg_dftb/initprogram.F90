@@ -175,6 +175,10 @@ module initprogram
   logical :: tFixEf                       !* Fix Fermi energy at specified value
   real(dp) :: Ef(2)                       !* Fermi energy
 
+  logical :: tFixLowestEi                 !* Fix the lowest eigenvalue at specified value
+  real(dp) :: FixLowestEi(2)              !* set value for the bottom eigenvalue
+
+
   logical :: tSetFillingTemp              !* Filling temp updated by MD.
   integer  :: iDistribFn = 0              !* Choice of electron distribution
                                           !* function, defaults to Fermi
@@ -766,6 +770,14 @@ contains
     else
       Ef = 0.0_dp
     end if
+
+    tFixLowestEi = input%ctrl%tFixLowestEi
+    if (tFixLowestEi) then
+      FixLowestEi =  input%ctrl%FixLowestEi
+    else
+      FixLowestEi = 0.0_dp
+    end if
+
     tSetFillingTemp = input%ctrl%tSetFillingTemp
     tFillKSep = input%ctrl%tFillKSep
     tempAtom = input%ctrl%tempAtom

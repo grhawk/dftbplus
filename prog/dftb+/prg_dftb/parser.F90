@@ -1536,6 +1536,23 @@ contains
       ctrl%tFixEf = .false.
     end if
 
+    call getChild(value, "LowestEigenstate", child=child2, modifier=modifier, &
+        & requested=.false.)
+    if (associated(child2)) then
+      if (ctrl%tSpin .and. .not.ctrl%t2Component) then
+        call getChildValue(child2, "", ctrl%FixLowestEi(:2), &
+            & modifier=modifier, child=child3)
+      else
+        call getChildValue(child2, "", ctrl%FixLowestEi(:1), &
+            & modifier=modifier, child=child3)
+      end if
+      call convertByMul(char(modifier), energyUnits, child3, &
+          & ctrl%FixLowestEi)
+      ctrl%tFixLowestEi = .true.
+    else
+      ctrl%tFixLowestEi = .false.
+    end if
+
     if (geo%tPeriodic .and. .not.ctrl%tFixEf) then
       call getChildValue(value, "IndependentKFilling", ctrl%tFillKSep, .false.)
     end if

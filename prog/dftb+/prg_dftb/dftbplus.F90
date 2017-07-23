@@ -794,6 +794,12 @@ program dftbplus
           end if
         end do spinDiag
 
+        if (tFixLowestEi) then
+          do iSpin = 1, nSpin
+            eigen(:,:,iSpin) = eigen(:,:,iSpin) +FixLowestEi(iSpin)-minval(eigen(:,:,iSpin))
+          end do
+        end if
+
         call getFillingsAndBandEnergies(eigen, nEl, nSpin, tempElec, kWeight, tSpinSharedEf,&
             & tFillKSep, tFixEf, iDistribFn, Ef, filling, Eband, TS, E0)
 
@@ -918,6 +924,10 @@ program dftbplus
               call push(storeEigvecsCplx(1), HSqrCplx(:,:,iK2,1))
             end if
           end do
+        end if
+
+        if (tFixLowestEi) then
+          eigen = eigen + FixLowestEi(1) - minval(eigen)
         end if
 
         call getFillingsAndBandEnergies(eigen, nEl, nSpin, tempElec, kWeight, tSpinSharedEf,&
