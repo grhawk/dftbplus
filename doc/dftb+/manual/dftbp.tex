@@ -2099,6 +2099,7 @@ description of the methods see the following subsections):
   model~\cite{elstner-jcp-114-5149}.
 \item \is{DftD3}: Dispersion is calculated as in the dftd3
   code~\cite{grimme-jcp-132-154104,grimme-jcp-32-1456-1465}.
+\item \is{dDMC}: Dispersion from a polarizable atom model~\cite{petraglia15}.
 \end{itemize}
 
 \subsubsection{LennardJones}
@@ -2371,6 +2372,26 @@ parameters are taken to be the same as in the dftd3 code.
 
 \end{description}
 
+\subsubsection{dDMC}
+\label{sec:dftbp.dDMC}
+
+Uses a Fermi-function damped Tang and Toennies dispersion function, where the
+atomic charge is used as a proxy for the polarizabiliy of each atom. This
+functional form has three parameters, $a$ scales the van der Waals radii, $b$ is
+the scaling of the atomic polarisability and $s$ the steepness of the Fermi
+function. The default values are fitted for the DFTB3 3OB
+set~\cite{petraglia15}:
+
+\begin{ptable}
+  \kw{a} & r & & 1.85705835084 & \\
+  \kw{b} & r & & 1.01824853175 & \\
+  \kw{s} & r & & 23.0 & \\
+\end{ptable}
+
+Example using default parameters:\invparskip
+\begin{verbatim}
+  Dispersion = dDMC {}
+\end{verbatim}
 
 \subsection{DFTB3}
 \label{sec:dftbp.DFTB3}
